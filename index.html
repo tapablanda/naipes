@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>naipes.club</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --white: #ffffff;
+    --black: #000000;
+  }
+
+  html, body {
+    background: var(--black);
+    font-family: sans-serif;
+    min-height: 100vh;
+  }
+
+  /* ── HEADER ── */
+  header {
+    background: var(--white);
+    padding: 1.2rem 2.5rem 1rem;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    border-bottom: 1px solid #e8e8e8;
+  }
+
+  nav {
+    display: flex;
+    gap: 2rem;
+    align-items: center;
+  }
+
+  nav a {
+    display: inline-block;
+    cursor: pointer;
+    user-select: none;
+    opacity: 0.28;
+    transition: opacity 0.2s;
+    text-decoration: none;
+  }
+
+  nav a img {
+    display: block;
+    height: 38px;
+    width: auto;
+  }
+
+  nav a.active {
+    opacity: 1;
+  }
+
+  nav a:hover:not(.active) {
+    opacity: 0.55;
+  }
+
+  /* ── CARD STAGE ── */
+  #stage {
+    background: var(--black);
+    min-height: calc(100vh - 70px);
+    position: relative;
+    padding: 3rem 2rem 6rem;
+  }
+
+  /* masonry-ish scattered layout */
+  .card-scatter {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+    gap: 0;
+    position: relative;
+  }
+
+  .card-item {
+    padding: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+  }
+
+  .card-item img {
+    display: block;
+    width: 100%;
+    max-width: 180px;
+    border-radius: 7px;
+    transition: transform 0.25s cubic-bezier(.22,.68,0,1.2), opacity 0.2s;
+    opacity: 0.9;
+    transform-origin: center center;
+    will-change: transform;
+  }
+
+  .card-item:hover img {
+    opacity: 1;
+    transform: var(--rot) scale(1.08) !important;
+    z-index: 10;
+    position: relative;
+  }
+
+  /* ── LIGHTBOX ── */
+  #lightbox {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.93);
+    z-index: 999;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+  }
+  #lightbox.open {
+    display: flex;
+  }
+  #lightbox img {
+    max-height: 88vh;
+    max-width: 88vw;
+    border-radius: 10px;
+    box-shadow: 0 0 80px rgba(255,255,255,0.05);
+  }
+  #lightbox-close {
+    position: fixed;
+    top: 1.5rem;
+    right: 2rem;
+    color: #666;
+    font-size: 1.8rem;
+    cursor: pointer;
+    font-family: var(--body);
+    font-weight: 300;
+    line-height: 1;
+    transition: color 0.15s;
+  }
+  #lightbox-close:hover { color: #fff; }
+
+  /* ── FILTER HIDDEN ── */
+  .card-item[data-hidden="true"] {
+    display: none;
+  }
+
+  /* ── EMPTY STATE ── */
+  .empty-deck {
+    color: #333;
+    font-family: var(--script);
+    font-size: 1.4rem;
+    padding: 4rem 2rem;
+    text-align: center;
+    width: 100%;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <nav id="nav">
+    <a class="active" data-filter="all"><img src="nav/all.png" alt="all"></a>
+    <a data-filter="playing cards"><img src="nav/playing_cards.png" alt="playing cards"></a>
+    <a data-filter="oracles"><img src="nav/oracles.png" alt="oracles"></a>
+    <a data-filter="other"><img src="nav/other.png" alt="other"></a>
+  </nav>
+</header>
+
+<div id="stage">
+  <div class="card-scatter" id="grid"></div>
+  <div class="empty-deck" id="empty" style="display:none;">nothing here yet</div>
+</div>
+
+<div id="lightbox">
+  <span id="lightbox-close">✕</span>
+  <img id="lightbox-img" src="" alt="" />
+</div>
+
+<script>
+/*
+  ┌─────────────────────────────────────────────┐
+  │  CARDS DATA                                  │
+  │  Add your images here.                       │
+  │  src: path to image file                     │
+  │  category: "playing cards" | "oracles" |     │
+  │             "other"                          │
+  │  size: "s" | "m" | "l" (optional)           │
+  └─────────────────────────────────────────────┘
+*/
+const cards = [
+  { src: "images/jumbo000.png", category: "playing cards" },
+  { src: "images/jumbo001.png", category: "playing cards" },
+  { src: "images/jumbo002.png", category: "playing cards" },
+  { src: "images/jumbo003.png", category: "playing cards" },
+  { src: "images/jumbo004.png", category: "playing cards" },
+  { src: "images/jumbo005.png", category: "playing cards" },
+  { src: "images/jumbo006.png", category: "playing cards" },
+  { src: "images/jumbo007.png", category: "playing cards" },
+  { src: "images/jumbo008.png", category: "playing cards" },
+  { src: "images/jumbo009.png", category: "playing cards" },
+  { src: "images/jumbo010.png", category: "playing cards" },
+  { src: "images/jumbo011.png", category: "playing cards" },
+  { src: "images/jumbo012.png", category: "playing cards" },
+  // Add more cards below:
+  // { src: "images/oracle001.png", category: "oracles" },
+  // { src: "images/other001.png",  category: "other"   },
+];
+
+/* ── Random rotation helper ── */
+function randRot() {
+  const deg = (Math.random() * 10 - 5).toFixed(2);
+  return `rotate(${deg}deg)`;
+}
+
+/* ── Render grid ── */
+function renderGrid(filter) {
+  const grid = document.getElementById('grid');
+  const empty = document.getElementById('empty');
+  grid.innerHTML = '';
+
+  const filtered = filter === 'all'
+    ? cards
+    : cards.filter(c => c.category === filter);
+
+  if (filtered.length === 0) {
+    empty.style.display = 'block';
+    return;
+  }
+  empty.style.display = 'none';
+
+  filtered.forEach(card => {
+    const rot = randRot();
+    const wrap = document.createElement('div');
+    wrap.className = 'card-item';
+    wrap.style.setProperty('--rot', rot);
+
+    const img = document.createElement('img');
+    img.src = card.src;
+    img.alt = card.category;
+    img.loading = 'lazy';
+    img.style.transform = rot;
+
+    img.addEventListener('click', () => openLightbox(card.src));
+    wrap.appendChild(img);
+    grid.appendChild(wrap);
+  });
+}
+
+/* ── Nav filter ── */
+let currentFilter = 'all';
+
+document.getElementById('nav').addEventListener('click', e => {
+  const a = e.target.closest('a');
+  if (!a) return;
+  document.querySelectorAll('#nav a').forEach(el => el.classList.remove('active'));
+  a.classList.add('active');
+  currentFilter = a.dataset.filter;
+  renderGrid(currentFilter);
+});
+
+/* ── Lightbox ── */
+function openLightbox(src) {
+  document.getElementById('lightbox-img').src = src;
+  document.getElementById('lightbox').classList.add('open');
+}
+
+document.getElementById('lightbox').addEventListener('click', () => {
+  document.getElementById('lightbox').classList.remove('open');
+});
+
+document.getElementById('lightbox-close').addEventListener('click', e => {
+  e.stopPropagation();
+  document.getElementById('lightbox').classList.remove('open');
+});
+
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') document.getElementById('lightbox').classList.remove('open');
+});
+
+/* ── Init ── */
+renderGrid('all');
+</script>
+</body>
+</html>
