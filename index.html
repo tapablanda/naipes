@@ -24,7 +24,8 @@
 
   nav {
     display: flex;
-    gap: 2rem;
+    flex-wrap: wrap;
+    gap: 1rem 2rem;
     align-items: center;
   }
 
@@ -39,7 +40,7 @@
 
   nav a img {
     display: block;
-    height: 38px;
+    height: 32px;
     width: auto;
   }
 
@@ -83,15 +84,6 @@
     transform: var(--rot, rotate(0deg)) scale(1.05);
   }
 
-  .deck-tile img.swap {
-    animation: swapIn 0.2s ease;
-  }
-
-  @keyframes swapIn {
-    from { opacity: 0; transform: var(--rot, rotate(0deg)) scale(0.95); }
-    to   { opacity: 0.9; transform: var(--rot, rotate(0deg)) scale(1); }
-  }
-
   .empty-msg {
     color: #333;
     font-size: 1.2rem;
@@ -106,7 +98,7 @@
 <header>
   <nav id="nav">
     <a class="active" data-filter="all"><img src="nav/all.png" alt="all"></a>
-    <a data-filter="playing cards"><img src="nav/playing-cards.png" alt="playing cards"></a>
+    <a data-filter="playing cards"><img src="nav/playing_cards.png" alt="playing cards"></a>
     <a data-filter="oracles"><img src="nav/oracles.png" alt="oracles"></a>
     <a data-filter="other"><img src="nav/other.png" alt="other"></a>
   </nav>
@@ -120,7 +112,7 @@
 <script>
 const decks = [
   {
-    category: "playing cards",
+    category: "other",
     images: [
       "images/01_jumbo/jumbo001.png",
       "images/01_jumbo/jumbo002.png",
@@ -136,7 +128,7 @@ const decks = [
     ]
   },
   {
-    category: "playing cards",
+    category: "other",
     images: [
       "images/02_panter/panter000.png",
       "images/02_panter/panter002.png",
@@ -214,10 +206,7 @@ function renderGrid(filter) {
 
     tile.addEventListener('click', () => {
       index = (index + 1) % deck.images.length;
-      img.classList.remove('swap');
-      void img.offsetWidth;
       img.src = deck.images[index];
-      img.classList.add('swap');
     });
 
     tile.appendChild(img);
